@@ -3,32 +3,37 @@
 #define LINHA 3
 #define COLUNA 3
 
-char tabuleiro[LINHA][COLUNA];
+char jogo[LINHA][COLUNA];
+int ganhou = 0;
 
-void jogar(char matriz[][COLUNA]);
-void tela(const char b[][COLUNA], int player);
-void iniciaTabuleiro(char tab[][COLUNA]);
+void jogar();
+void tela(int player);
+void iniciaTabuleiro();
 int coordenadaEhValida(int x, int y);
 int eValido(char letra);
-int jogador();
+
+int ganhouPrincipal();
+int ganhouSecundaria();
+int ganhouLinha();
+int ganhouColuna();
 
 
 int main() {
 
-	iniciaTabuleiro(tabuleiro);
-	jogar(tabuleiro);
+	iniciaTabuleiro();
+	jogar();
 
 
 	return 0;
 }
 
-void jogar(char matriz[][COLUNA]) {
-	int play = 1, jogadas = 0, ganhou = 0;
+void jogar() {
+	int play = 1, jogadas = 0;
 	int x, y, valida;
 	do {
 		do {
 
-			tela(matriz, play);
+			tela(play);
 			printf("Escolha uma posicao!\n");
 			printf("Linha 1,2,3:\n");
 			scanf("%d", &x);
@@ -41,21 +46,96 @@ void jogar(char matriz[][COLUNA]) {
 			}
 		} while (valida != 2);
 		if (play == 1) {
-			matriz[x][y] = 'X';
+			jogo[x][y] = 'X';
 		}
 		else {
-			matriz[x][y] = 'O';
+			jogo[x][y] = 'O';
 		}
 		jogadas++;
 		play++;
 		if (play == 3) {
 			play = 1;
 		}
+
+		ganhou += ganhouLinha();
+		ganhou += ganhouColuna();
+		ganhou += ganhouPrincipal();
+		ganhou += ganhouSecundaria();
+
+
+
 	} while (ganhou == 0 && jogadas < 9);
+
+	if (jogadas == 9)
+		play = 0; //Deu Velha
+	else if (play == 2)
+		play = 1;
+	else
+		play = 2;
+	tela(play);
+}
+
+int ganhouColuna() {
+	int i, j, igual = 1;
+	for (i = 0; i < 3; i++) {
+		for (j = 0; j < 2; j++) {
+			if (eValido(jogo[i][j]) && jogo[i][j] == jogo[i + 1][j]) {
+				igual++;
+			}
+		}
+		if (igual == 3)
+			return 1;
+		igual = 1;
+	}
+	return 0;
+}
+
+int ganhouLinha() {
+	int i, j, igual = 1;
+	for (i = 0; i < 3; i++) {
+		for (j = 0; j < 2; j++) {
+			if (eValido(jogo[i][j]) && jogo[i][j] == jogo[i][j + 1]) {
+				igual++;
+			}
+		}
+		if (igual == 3)
+			return 1;
+		igual = 1;
+	}
+	return 0;
+}
+
+int ganhouPrincipal() {
+	int igual = 1;
+	for (int i = 0; i < 2; i++) {
+		if (eValido(jogo[i][i]) && jogo[i][i] == jogo[i + 1][i + 1]) {
+			igual++;
+		}
+	}
+	if (igual == 3)
+		return 1;
+	else
+		return 0;
+
+}
+
+int ganhouSecundaria() {
+	int igual = 1;
+	for (int i = 0; i < 2; i++) {
+		if (eValido(jogo[i][2 - i]) && jogo[i][2 - i] == jogo[i + 1][2 - i - 1]) {
+			igual++;
+		}
+
+	}
+	if (igual == 3)
+		return 1;
+	else
+		return 0;
+
 }
 
 int posicaoVazia(int x, int y) {
-	if (tabuleiro[x][y] != 'X' && tabuleiro[x][y] != 'O') {
+	if (jogo[x][y] != 'X' && jogo[x][y] != 'O') {
 		return 1;
 	}
 	else {
@@ -74,12 +154,6 @@ int coordenadaEhValida(int x, int y) {
 	return 0;
 }
 
-int jogador() {
-	
-}
-
-
-
 int eValido(char letra) {
 	if (letra == 'X' || letra == 'O')
 		return 1;
@@ -87,39 +161,47 @@ int eValido(char letra) {
 		return 0;
 }
 
-void iniciaTabuleiro(char tab[][COLUNA]) {
+void iniciaTabuleiro() {
 
 	for (int lin = 0; lin < LINHA; lin++) {
 		for (int col = 0; col < COLUNA; col++) {
-			tab[lin][col] = ' ';
+			jogo[lin][col] = ' ';
 		}
 	}
 }
 
-void tela(const char b[][COLUNA], const int player) {
+void tela(const int player) {
 	system("cls");
 	printf("     ********************\n"
 		"     *  Jogo da Velha!  *\n"
 		"     ********************\n\n\n");
+	if (ganhou != 0) {
+		if (player == 0)
+			printf("      Eh essa deu velha :(\n");
+		else
+			printf("      O Player %d ganhou essa!\n\n", player);
+	}
+	else
+		printf("      Vez do Player %d!\n\n", player);
 
-	printf("      Vez do Player %d!\n\n", player);
 
-	printf("%20s\n", "A   B   C");
-
+	int lin = 3;
 	for (int linha = 0; linha < LINHA; linha++) {
 		printf("         ");
-		printf("%d", linha + 1);
+		printf("%d", lin);
 		for (int coluna = 0; coluna < COLUNA; coluna++) {
 			if (coluna < COLUNA - 1) {
-				printf(" %c |", b[linha][coluna]);
+				printf(" %c |", jogo[linha][coluna]);
 			}
 			else {
-				printf(" %c ", b[linha][coluna]);
+				printf(" %c ", jogo[linha][coluna]);
 			}
 
 		}
 		printf("\n");
 		if (linha < LINHA - 1)
 			printf("           ---------\n");
+		lin--;
 	}
+	printf("%20s\n", "A   B   C");
 }
