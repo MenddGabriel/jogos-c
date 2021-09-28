@@ -1,16 +1,27 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
+#include <string.h>
+#include <conio.h>
+#include <windows.h>
 #define LINHA 3
 #define COLUNA 3
 
 char jogo[LINHA][COLUNA];
 int ganhou = 0;
+char cordenadaDigitada[3] = { '\0' };
 
+void clear();
 void jogar();
 void tela(int player);
 void iniciaTabuleiro();
+void digito();
+int posicaoVazia(int x, int y);
 int coordenadaEhValida(int x, int y);
 int eValido(char letra);
+int isLetra(char c);
+int isNumero(char c);
+int posY();
+int posX();
 
 int ganhouPrincipal();
 int ganhouSecundaria();
@@ -19,11 +30,18 @@ int ganhouColuna();
 
 
 int main() {
+	int maisUma = 1;
+	do {
+		ganhou = 0;
+		iniciaTabuleiro();
+		jogar();
 
-	iniciaTabuleiro();
-	jogar();
-
-
+		printf("\nJogar Novamente 1: \n");
+		printf("Sair 2: \n");
+		scanf("%d", &maisUma);
+		
+	} while (maisUma != 2);
+	
 	return 0;
 }
 
@@ -31,15 +49,23 @@ void jogar() {
 	int play = 1, jogadas = 0;
 	int x, y, valida;
 	do {
+		int invalida = 0;
 		do {
-
+			clear();
 			tela(play);
-			printf("Escolha uma posicao!\n");
-			printf("Linha 1,2,3:\n");
-			scanf("%d", &x);
-			printf("Coluna A,B,C:\n");
-			scanf("%d", &y);
+			
+			printf("\n      Player %d\n", play);
 
+			if(invalida != 0)
+				printf("      Cordenada [%s] ja ocupada tente outra!\n", cordenadaDigitada);
+			printf("      Cordenada: ");
+			invalida++;
+
+			digito();
+
+			x = posX();
+			y = posY();
+			
 			valida = coordenadaEhValida(x, y);
 			if (valida == 1) {
 				valida += posicaoVazia(x, y);
@@ -72,7 +98,32 @@ void jogar() {
 		play = 1;
 	else
 		play = 2;
+	clear();
 	tela(play);
+}
+
+void clear() {
+
+	DWORD n;  						/* Número de caracteres escritos */
+	DWORD size;						/* número de caracteres visíveis */
+	COORD coord = { 0, 0 };			/* Posição superior esquerda da tela */
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+	/* Obter um identificador para o console */
+	HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	GetConsoleScreenBufferInfo(h, &csbi);
+
+	/* Encontre o número de caracteres a serem sobrescritos */
+	size = csbi.dwSize.X * csbi.dwSize.Y;
+
+	/* Sobrescrever o buffer de tela com espaços em branco */
+	FillConsoleOutputCharacter(h, TEXT(' '), size, coord, &n);
+	GetConsoleScreenBufferInfo(h, &csbi);
+	FillConsoleOutputAttribute(h, csbi.wAttributes, size, coord, &n);
+
+	/* Redefine o cursor para a posição superior esquerda */
+	SetConsoleCursorPosition(h, coord);
 }
 
 int ganhouColuna() {
@@ -170,8 +221,120 @@ void iniciaTabuleiro() {
 	}
 }
 
+int isLetra(char c)//verifica se a entrada e uma letra a, b ou c
+{
+
+	if (c == 'a' || c == 'b' || c == 'c' || c == 'A' || c == 'B' || c == 'C')
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+
+}
+
+int isNumero(char c)//verifica se a entrada e um numero 1, 2 ou 3
+{
+
+	if (c == '1' || c == '2' || c == '3')
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+
+}
+
+void digito()
+{
+	memset(cordenadaDigitada, '\0', 3);
+
+	char c;
+	int i = 0;
+	char letra;
+	int numero = 0;
+	int aceitos = 3;
+
+	do
+	{
+		c = _getch();
+
+		if (isLetra(c) != 0 && i < 1)
+		{
+			cordenadaDigitada[i] = c;
+			i++;
+			printf("%c", c);
+		}
+		else if (isNumero(c) != 0 && i == 1)
+		{
+			cordenadaDigitada[i] = c;
+			i++;
+			printf("%c", c);
+		}
+		else if (c == 8 && i)
+		{
+			cordenadaDigitada[i] = '\0';
+			i--;
+			printf("\b \b");
+		}
+
+	} while (c != 13);
+
+	cordenadaDigitada[i] = '\0';
+
+
+}
+
+int posY()
+{
+	int y = 0;
+	switch (cordenadaDigitada[0])
+	{
+	case 'A':
+	case 'a':
+		y = 0;
+		break;
+	case 'B':
+	case 'b':
+		y = 1;
+		break;
+	case 'C':
+	case 'c':
+		y = 2;
+		break;
+	}
+
+	return y;
+
+}
+
+int posX()
+{
+	int x = 0;
+	switch (cordenadaDigitada[1])
+	{
+	case '3':
+		x = 0;
+		break;
+	case '2':
+		x = 1;
+		break;
+	case '1':
+		x = 2;
+		break;
+	}
+
+	return x;
+
+}
+
 void tela(const int player) {
-	system("cls");
+
+
 	printf("     ********************\n"
 		"     *  Jogo da Velha!  *\n"
 		"     ********************\n\n\n");
